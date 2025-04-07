@@ -27,11 +27,16 @@ fetch('address.json')
         citySelect.appendChild(option);
       });
 
+      // При выборе города фильтруем данные, обновляем районы, применяем фильтры и центрируем карту
       citySelect.addEventListener('change', function() {
         const city = citySelect.value;
         filteredData = data.filter(item => item.city_with_full_type === city);
         updateDistrictFilter(filteredData);
         applyFilters();
+        if (filteredData.length > 0) {
+          // Центрируем карту на координатах первого элемента (приводим к числам)
+          map.setCenter([+filteredData[0].geo_lat, +filteredData[0].geo_lon]);
+        }
       });
     }
 
@@ -144,7 +149,8 @@ fetch('address.json')
     ymaps.ready(init);
   });
 
-// Функционал выдвижного нижнего блока
+// Функционал выдвижного нижнего блока с "снаппингом"
+// Свайп вверх – открытие на 90vh, свайп вниз – сворачивание до 20vh
 document.addEventListener('DOMContentLoaded', function(){
   const sheet = document.getElementById('bottom-sheet');
   const handle = document.getElementById('sheet-handle');
@@ -166,11 +172,20 @@ document.addEventListener('DOMContentLoaded', function(){
     let newHeightPx = startHeight + dy;
     const vh = window.innerHeight / 100;
     let newHeightVh = newHeightPx / vh;
-    newHeightVh = Math.max(20, Math.min(newHeightVh, 80)); // Ограничение от 20 до 80vh
+    // Ограничение динамического диапазона: от 20 до 90 vh
+    newHeightVh = Math.max(20, Math.min(newHeightVh, 90));
     sheet.style.height = newHeightVh + "vh";
   }
 
   function stopDrag(e) {
+    const currentHeightPx = sheet.getBoundingClientRect().height;
+    const currentHeightVh = currentHeightPx / (window.innerHeight / 100);
+    // Снаппинг: если выше середины (примерно 55vh), то открываем на 90vh, иначе сворачиваем до 20vh
+    if(currentHeightVh > 55) {
+      sheet.style.height = "90vh";
+    } else {
+      sheet.style.height = "20vh";
+    }
     document.removeEventListener(e.touches ? 'touchmove' : 'mousemove', doDrag, false);
     document.removeEventListener(e.touches ? 'touchend' : 'mouseup', stopDrag, false);
   }
