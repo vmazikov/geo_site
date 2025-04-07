@@ -1,61 +1,60 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Фильтрация и карта</title>
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=b71a7c03-a060-449e-98cf-91c1464a5615&lang=ru_RU" type="text/javascript"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Фильтрация и карта</title>
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU" type="text/javascript"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="header">
+  <!-- Карта на весь экран -->
+  <div id="map"></div>
+  
+  <!-- Нижний выдвижной блок -->
+  <div id="bottom-sheet">
+    <div id="sheet-handle"></div>
+    <div id="sheet-content">
+      <div id="header">
         <h1>Выбранный город: <span id="city-name"></span></h1>
         <h2>Выбранный район: <span id="district-name"></span></h2>
         <p>Количество выбранных домов: <span id="house-count"></span></p>
         <p>Количество выбранных подъездов: <span id="entrances-count"></span></p>
         <p>Количество выбранных квартир: <span id="apartments-count"></span></p>
-    </div>
-
-    <div id="filters">
+      </div>
+      <div id="filters">
         <label for="city">Город:</label>
         <select id="city">
-            <!-- Options will be added dynamically -->
+          <!-- Опции будут добавлены динамически -->
         </select>
-
         <label for="district">Район:</label>
         <select id="district">
-            <option value="">Все</option>
+          <option value="">Все</option>
         </select>
-
         <label for="technology">Технология:</label>
         <div id="technology">
-            <!-- Checkboxes will be added dynamically -->
+          <!-- Чекбоксы будут добавлены динамически -->
         </div>
-
         <label for="year">Год постройки:</label>
         <input type="number" id="year-from" placeholder="От" min="1900" max="2100">
         <input type="number" id="year-to" placeholder="До" min="1900" max="2100">
-
         <label for="ports-free">Свободные порты:</label>
         <input type="number" id="free-ports-from" placeholder="От" min="0">
         <input type="number" id="free-ports-to" placeholder="До" min="0">
-
         <label for="ports-busy">Занятые порты:</label>
         <input type="number" id="busy-ports-from" placeholder="От" min="0">
         <input type="number" id="busy-ports-to" placeholder="До" min="0">
-
         <label for="floors">Этажи:</label>
         <input type="number" id="floors-from" placeholder="От" min="0">
         <input type="number" id="floors-to" placeholder="До" min="0">
-
         <label for="entrances">Подъезды:</label>
         <input type="number" id="entrances-from" placeholder="От" min="0">
         <input type="number" id="entrances-to" placeholder="До" min="0">
-
         <button id="apply-filters">Применить фильтры</button>
+      </div>
     </div>
+  </div>
 
-    <div id="map" style="width: 100%; height: 500px;"></div>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
