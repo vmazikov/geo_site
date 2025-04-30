@@ -136,6 +136,7 @@ fetch('address.json')
             <strong>Подъезды:</strong> ${item.entrances_in_house}<br>
             <strong>Квартиры:</strong> ${item.apartments_in_house}
           `,
+          objectData: item 
         }, {
           iconColor: iconColor
         });
@@ -189,36 +190,33 @@ fetch('address.json')
 
   // --- Режим SELECT: клик по иконкам ---
   function initSelect() {
-    map.geoObjects.each((placemark, index) => {
-      // сохраняем индекс дома в свойствах
-      if (placemark.properties.get('id') == null) {
-        placemark.properties.set('id', index);
-      }
+    map.geoObjects.each(placemark => {
       placemark.events.add('click', onPlacemarkClick);
     });
   }
   function teardownSelect() {
     map.geoObjects.each(pm => {
       pm.events.remove('click', onPlacemarkClick);
-      // возвращаем стандартный стиль
       pm.options.unset('preset');
     });
     selectedPlacemarks.clear();
   }
   function onPlacemarkClick(e) {
-    const pm = e.get('target');
-    const id = pm.properties.get('id');
-    if (selectedPlacemarks.has(id)) {
-      selectedPlacemarks.delete(id);
-      pm.options.set('preset','islands#blueDotIcon');
+    const pm   = e.get('target');
+    const item = pm.properties.get('objectData');
+    if (!item) return;
+  
+    if (selectedPlacemarks.has(item)) {
+      selectedPlacemarks.delete(item);
+      pm.options.set('preset', 'islands#blueDotIcon');
     } else {
-      selectedPlacemarks.add(id);
-      pm.options.set('preset','islands#greenCircleDotIcon');
+      selectedPlacemarks.add(item);
+      pm.options.set('preset', 'islands#greenCircleDotIcon');
     }
-    const items = Array.from(selectedPlacemarks).map(i => data[i]);
-    updateCounts(items);
+    // Передаем в updateCounts массив реальных объектов
+    updateCounts(Array.from(selectedPlacemarks));
   }
-
+  
   // --- Режим DRAW: обводка полигона ---
   function initDraw() {
     map.container.getElement().style.cursor = 'crosshair';
