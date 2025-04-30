@@ -149,61 +149,15 @@ fetch('address.json')
     ymaps.ready(init);
   });
 
-// Функционал выдвижного нижнего блока с "снаппингом"
-// Свайп вверх – открытие на 90vh, свайп вниз – сворачивание до 20vh
-// Функционал выдвижного нижнего блока с легким свайпом
-document.addEventListener('DOMContentLoaded', function(){
-    const sheet = document.getElementById('bottom-sheet');
-    const handle = document.getElementById('sheet-handle');
-    let startY, startHeightVh;
-    
-    // Настраиваемые параметры:
-    const DRAG_SENSITIVITY = 2;  // Коэффициент усиления перемещения (увеличьте, чтобы свайп был "легче")
-    const OPEN_THRESHOLD = 10;   // Изменение вверх (в vh), достаточное для открытия (90vh)
-    const CLOSE_THRESHOLD = 10;  // Изменение вниз (в vh), достаточное для закрытия (20vh)
-    
-    handle.addEventListener('touchstart', initDrag, false);
-    handle.addEventListener('mousedown', initDrag, false);
-    
-    function initDrag(e) {
-      startY = e.touches ? e.touches[0].clientY : e.clientY;
-      startHeightVh = sheet.getBoundingClientRect().height / (window.innerHeight / 100);
-      document.addEventListener(e.touches ? 'touchmove' : 'mousemove', doDrag, false);
-      document.addEventListener(e.touches ? 'touchend' : 'mouseup', stopDrag, false);
-    }
-    
-    function doDrag(e) {
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const dy = startY - clientY;
-      // Усиливаем смещение
-      let newHeightPx = (startHeightVh * window.innerHeight / 100) + DRAG_SENSITIVITY * dy;
-      let newHeightVh = newHeightPx / (window.innerHeight / 100);
-      newHeightVh = Math.max(20, Math.min(newHeightVh, 90)); // Ограничение: от 20 до 90 vh
-      sheet.style.height = newHeightVh + "vh";
-    }
-    
-    function stopDrag(e) {
-      const currentHeightVh = sheet.getBoundingClientRect().height / (window.innerHeight / 100);
-      const diff = currentHeightVh - startHeightVh;
-      
-      // Если свайп вверх (увеличение высоты)
-      if(diff > 0) {
-        if(diff > OPEN_THRESHOLD) {
-           sheet.style.height = "90vh";
-        } else {
-           sheet.style.height = "10vh";
-        }
-      }
-      // Если свайп вниз (уменьшение высоты)
-      else {
-        if(-diff > CLOSE_THRESHOLD) {
-           sheet.style.height = "20vh";
-        } else {
-           sheet.style.height = "10vh";
-        }
-      }
-      document.removeEventListener(e.touches ? 'touchmove' : 'mousemove', doDrag, false);
-      document.removeEventListener(e.touches ? 'touchend' : 'mouseup', stopDrag, false);
-    }
-  });
+  document.addEventListener('DOMContentLoaded', () => {
+    const sheet     = document.getElementById('bottom-sheet');
+    const toggleBtn = document.getElementById('toggle-sheet');
   
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = sheet.classList.toggle('expanded');
+      sheet.classList.toggle('collapsed');
+      toggleBtn.textContent = isCollapsed
+        ? 'Свернуть фильтры'
+        : 'Показать фильтры';
+    });
+  });

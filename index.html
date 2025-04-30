@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Фильтрация и карта</title>
   <script src="https://api-maps.yandex.ru/2.1/?apikey=YOUR_API_KEY&lang=ru_RU" type="text/javascript"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" integrity="sha512-/…ваш-хэш…" crossorigin="anonymous" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Карта занимает весь экран -->
   <div id="map"></div>
   
-  <!-- Нижний выдвижной блок -->
-  <div id="bottom-sheet">
-    <div id="sheet-handle"></div>
+<!-- Нижний выдвижной блок -->
+<div id="bottom-sheet" class="collapsed">
+    <button id="toggle-sheet">Показать фильтры</button>
     <div id="sheet-content">
       <div id="header">
         <h1>Выбранный город: <span id="city-name"></span></h1>
@@ -24,36 +25,41 @@
       </div>
       <div id="filters">
         <label for="city">Город:</label>
-        <select id="city">
-          <!-- Опции будут добавлены динамически -->
-        </select>
+        <select id="city"></select>
+  
         <label for="district">Район:</label>
         <select id="district">
           <option value="">Все</option>
         </select>
+  
         <label for="technology">Технология:</label>
-        <div id="technology">
-          <!-- Чекбоксы будут добавлены динамически -->
-        </div>
-        <label for="year">Год постройки:</label>
+        <div id="technology"></div>
+  
+        <label for="year-from">Год постройки:</label>
         <input type="number" id="year-from" placeholder="От" min="1900" max="2100">
-        <input type="number" id="year-to" placeholder="До" min="1900" max="2100">
-        <label for="ports-free">Свободные порты:</label>
+        <input type="number" id="year-to"   placeholder="До" min="1900" max="2100">
+  
+        <label for="free-ports-from">Свободные порты:</label>
         <input type="number" id="free-ports-from" placeholder="От" min="0">
-        <input type="number" id="free-ports-to" placeholder="До" min="0">
-        <label for="ports-busy">Занятые порты:</label>
+        <input type="number" id="free-ports-to"   placeholder="До"  min="0">
+  
+        <label for="busy-ports-from">Занятые порты:</label>
         <input type="number" id="busy-ports-from" placeholder="От" min="0">
-        <input type="number" id="busy-ports-to" placeholder="До" min="0">
-        <label for="floors">Этажи:</label>
+        <input type="number" id="busy-ports-to"   placeholder="До"  min="0">
+  
+        <label for="floors-from">Этажи:</label>
         <input type="number" id="floors-from" placeholder="От" min="0">
-        <input type="number" id="floors-to" placeholder="До" min="0">
-        <label for="entrances">Подъезды:</label>
+        <input type="number" id="floors-to"   placeholder="До" min="0">
+  
+        <label for="entrances-from">Подъезды:</label>
         <input type="number" id="entrances-from" placeholder="От" min="0">
-        <input type="number" id="entrances-to" placeholder="До" min="0">
+        <input type="number" id="entrances-to"   placeholder="До" min="0">
+  
         <button id="apply-filters">Применить фильтры</button>
       </div>
     </div>
   </div>
+  
 
   <script src="script.js"></script>
 </body>
