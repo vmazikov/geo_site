@@ -8,32 +8,13 @@ const overlay = document.createElement('div');
 overlay.id = 'mode-overlay';
 overlay.innerHTML = `
   <div>
-    <h3>Выбрано домов: <span id="ov-house-count">0</span></h3>
-    <p>Подъездов: <span id="ov-entrances-count">0</span></p>
-    <p>Квартир: <span id="ov-apartments-count">0</span></p>
+    <h3 class="modal-h3">Выбрано домов: <span id="ov-house-count">0</span></h3>
+    <p class="modal-p">Подъездов: <span id="ov-entrances-count">0</span></p>
+    <p class="modal-p">Квартир: <span id="ov-apartments-count">0</span></p>
     <button class="finish-btn">Завершить</button>
   </div>
 `;
 document.body.append(overlay);
-(function(){
-  // …ваши переменные и функции…
-
-  // Инициализация UI-кнопок внутри этого замыкания:
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('#mode-overlay .finish-btn')
-      .addEventListener('click', () => setMode('normal'));
-    document.querySelectorAll('#mode-controls .mode-btn')
-      .forEach(btn => btn.addEventListener('click', () => {
-        setMode(btn.dataset.mode);
-        // при переключении режима скрываем нижнюю шторку
-        document.getElementById('bottom-sheet')
-          .classList.add('collapsed');
-      }));
-  });
-
-  // …остальной код IIFE…
-})();
-
 
 // Загружаем данные и инициализируем карту и фильтры
 fetch('address.json')
@@ -217,9 +198,9 @@ fetch('address.json')
     const totalHouses     = items.length;
     const totalEntrances  = items.reduce((sum,i) => sum + Number(i.entrances_in_house), 0);
     const totalApartments = items.reduce((sum,i) => sum + Number(i.apartments_in_house), 0);
-    document.getElementById('house-count').textContent      = totalHouses;
-    document.getElementById('entrances-count').textContent = totalEntrances;
-    document.getElementById('apartments-count').textContent= totalApartments;
+    document.getElementById('ov-house-count').textContent      = totalHouses;
+    document.getElementById('ov-entrances-count').textContent = totalEntrances;
+    document.getElementById('ov-apartments-count').textContent= totalApartments;
   }
 
   // --- Режим SELECT: клик по иконкам ---
@@ -266,8 +247,7 @@ fetch('address.json')
     addFinishButton();
   }
   function teardownDraw() {
-    overlay.classList.remove('visible');
-    map.container.getElement().style.cursor = '';
+    // убираем polygon и слушатели
     map.events.remove('click', onMapClick);
     removeFinishButton();
     if (drawPolygon) {
@@ -275,6 +255,14 @@ fetch('address.json')
       drawPolygon = null;
     }
     drawCoords = [];
+  
+    // возвращаем курсор
+    map.container.getElement().style.cursor = '';
+    
+    // восстанавливаем балуны
+    map.geoObjects.each(pm => {
+      pm.options.set('openBalloonOnClick', true);
+    });
   }
   function onMapClick(e) {
     const coord = e.get('coords');
@@ -312,10 +300,9 @@ fetch('address.json')
       drawPolygon.geometry.contains([+item.geo_lat, +item.geo_lon])
     );
     updateCounts(inside);
-    // скрываем оверлей
-    overlay.classList.remove('visible');
-    // возвращаем нормальный режим и прячем шторку
-    setMode('normal');
+  
+    // убираем только поведение draw
+    teardownDraw();
   }
 
   // --- Режимы и переключение ---
@@ -327,13 +314,34 @@ fetch('address.json')
     if (mode === 'select') initSelect();
     if (mode === 'draw')   initDraw();
   }
-  function setMode(newMode) {
-    teardownMode();
-    mode = newMode;
-    initMode();
-    // прячем шторку при любом переключении режима
-    document.getElementById('bottom-sheet').classList.add('collapsed');
+// 4) setMode — пусть он скрывает overlay только при входе в 'normal'
+function setMode(newMode) {
+  // tear-down предыдущего
+  if (mode === 'select') teardownSelect();
+  if (mode === 'draw')   teardownDraw();
+
+  mode = newMode;
+
+  // init нового
+  if (mode === 'select') initSelect();
+  if (mode === 'draw')   initDraw();
+
+  // всегда прячем нижнюю шторку
+  document.getElementById('bottom-sheet').classList.add('collapsed');
+
+  // overlay скрывается только когда режим нормальный
+  if (mode === 'normal') {
+    overlay.classList.remove('visible');
   }
+}
+
+  document
+  .querySelector('#mode-overlay .finish-btn')
+  .addEventListener('click', () => {
+    // скрываем overlay и возвращаем нормальный режим
+    overlay.classList.remove('visible');
+    setMode('normal');
+  });
 
   // --- Инициализация UI-кнопок ---
   document.addEventListener('DOMContentLoaded', () => {
