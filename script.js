@@ -3,6 +3,38 @@ let data = [];              // ← Глобальный массив всех д
 let filteredData = [];      // ← Массив после фильтрации
 let technologies = [];      // ← Массив технологий
 
+// создаём оверлей-панельку:
+const overlay = document.createElement('div');
+overlay.id = 'mode-overlay';
+overlay.innerHTML = `
+  <div>
+    <h3>Выбрано домов: <span id="ov-house-count">0</span></h3>
+    <p>Подъездов: <span id="ov-entrances-count">0</span></p>
+    <p>Квартир: <span id="ov-apartments-count">0</span></p>
+    <button class="finish-btn">Завершить</button>
+  </div>
+`;
+document.body.append(overlay);
+(function(){
+  // …ваши переменные и функции…
+
+  // Инициализация UI-кнопок внутри этого замыкания:
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('#mode-overlay .finish-btn')
+      .addEventListener('click', () => setMode('normal'));
+    document.querySelectorAll('#mode-controls .mode-btn')
+      .forEach(btn => btn.addEventListener('click', () => {
+        setMode(btn.dataset.mode);
+        // при переключении режима скрываем нижнюю шторку
+        document.getElementById('bottom-sheet')
+          .classList.add('collapsed');
+      }));
+  });
+
+  // …остальной код IIFE…
+})();
+
+
 // Загружаем данные и инициализируем карту и фильтры
 fetch('address.json')
   .then(response => response.json())
@@ -117,6 +149,8 @@ fetch('address.json')
         );
       });
 
+      document.getElementById('bottom-sheet')
+      .classList.add('collapsed');
       updateMap(filteredData);
       updateHeader(filteredData);
     }
@@ -190,40 +224,49 @@ fetch('address.json')
 
   // --- Режим SELECT: клик по иконкам ---
   function initSelect() {
-    map.geoObjects.each(placemark => {
-      placemark.events.add('click', onPlacemarkClick);
+    overlay.classList.add('visible');
+    map.geoObjects.each(pm => {
+      pm.options.set('openBalloonOnClick', false);
+      pm.events.add('click', onSelectClick);
     });
   }
+  
   function teardownSelect() {
+    overlay.classList.remove('visible');
     map.geoObjects.each(pm => {
-      pm.events.remove('click', onPlacemarkClick);
+      pm.events.remove('click', onSelectClick);
       pm.options.unset('preset');
+      pm.options.set('openBalloonOnClick', true);
     });
     selectedPlacemarks.clear();
   }
-  function onPlacemarkClick(e) {
-    const pm   = e.get('target');
-    const item = pm.properties.get('objectData');
-    if (!item) return;
   
-    if (selectedPlacemarks.has(item)) {
-      selectedPlacemarks.delete(item);
+
+  function onSelectClick(e) {
+    const pm  = e.get('target');
+    const obj = pm.properties.get('objectData');
+    if (!obj) return;
+  
+    if (selectedPlacemarks.has(obj)) {
+      selectedPlacemarks.delete(obj);
       pm.options.set('preset', 'islands#blueDotIcon');
     } else {
-      selectedPlacemarks.add(item);
+      selectedPlacemarks.add(obj);
       pm.options.set('preset', 'islands#greenCircleDotIcon');
     }
-    // Передаем в updateCounts массив реальных объектов
+  
     updateCounts(Array.from(selectedPlacemarks));
   }
-  
+
   // --- Режим DRAW: обводка полигона ---
   function initDraw() {
+    overlay.classList.add('visible');
     map.container.getElement().style.cursor = 'crosshair';
     map.events.add('click', onMapClick);
     addFinishButton();
   }
   function teardownDraw() {
+    overlay.classList.remove('visible');
     map.container.getElement().style.cursor = '';
     map.events.remove('click', onMapClick);
     removeFinishButton();
@@ -265,12 +308,14 @@ fetch('address.json')
     if (btn) btn.remove();
   }
   function finishDraw() {
-    teardownDraw();
-    if (!drawPolygon) return;
     const inside = data.filter(item =>
       drawPolygon.geometry.contains([+item.geo_lat, +item.geo_lon])
     );
     updateCounts(inside);
+    // скрываем оверлей
+    overlay.classList.remove('visible');
+    // возвращаем нормальный режим и прячем шторку
+    setMode('normal');
   }
 
   // --- Режимы и переключение ---
@@ -286,6 +331,8 @@ fetch('address.json')
     teardownMode();
     mode = newMode;
     initMode();
+    // прячем шторку при любом переключении режима
+    document.getElementById('bottom-sheet').classList.add('collapsed');
   }
 
   // --- Инициализация UI-кнопок ---
