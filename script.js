@@ -1,11 +1,15 @@
+let map;
+let data = [];              // ← Глобальный массив всех домов
+let filteredData = [];      // ← Массив после фильтрации
+let technologies = [];      // ← Массив технологий
+
 // Загружаем данные и инициализируем карту и фильтры
 fetch('address.json')
   .then(response => response.json())
   .then(data => {
-    let map;
-    let filteredData = data;
-    let technologies = [...new Set(data.map(item => item.txb))];
-
+    data = data;                      // ← Заполняем глобальную data
+    filteredData = data.slice();      // ← Изначально без фильтрации
+    technologies = [...new Set(data.map(item => item.txb))];
     function init() {
       map = new ymaps.Map("map", {
         center: [56.091522, 86.069079],
@@ -162,3 +166,145 @@ fetch('address.json')
         : 'Показать фильтры';
     });
   });
+
+  
+
+
+  // selection.js
+(function(){
+  let mode = 'normal';
+  const selectedPlacemarks = new Set();
+  let drawCoords = [];
+  let drawPolygon = null;
+
+  // --- Подсчёт и обновление шапки ---
+  function updateCounts(items) {
+    const totalHouses     = items.length;
+    const totalEntrances  = items.reduce((sum,i) => sum + Number(i.entrances_in_house), 0);
+    const totalApartments = items.reduce((sum,i) => sum + Number(i.apartments_in_house), 0);
+    document.getElementById('house-count').textContent      = totalHouses;
+    document.getElementById('entrances-count').textContent = totalEntrances;
+    document.getElementById('apartments-count').textContent= totalApartments;
+  }
+
+  // --- Режим SELECT: клик по иконкам ---
+  function initSelect() {
+    map.geoObjects.each((placemark, index) => {
+      // сохраняем индекс дома в свойствах
+      if (placemark.properties.get('id') == null) {
+        placemark.properties.set('id', index);
+      }
+      placemark.events.add('click', onPlacemarkClick);
+    });
+  }
+  function teardownSelect() {
+    map.geoObjects.each(pm => {
+      pm.events.remove('click', onPlacemarkClick);
+      // возвращаем стандартный стиль
+      pm.options.unset('preset');
+    });
+    selectedPlacemarks.clear();
+  }
+  function onPlacemarkClick(e) {
+    const pm = e.get('target');
+    const id = pm.properties.get('id');
+    if (selectedPlacemarks.has(id)) {
+      selectedPlacemarks.delete(id);
+      pm.options.set('preset','islands#blueDotIcon');
+    } else {
+      selectedPlacemarks.add(id);
+      pm.options.set('preset','islands#greenCircleDotIcon');
+    }
+    const items = Array.from(selectedPlacemarks).map(i => data[i]);
+    updateCounts(items);
+  }
+
+  // --- Режим DRAW: обводка полигона ---
+  function initDraw() {
+    map.container.getElement().style.cursor = 'crosshair';
+    map.events.add('click', onMapClick);
+    addFinishButton();
+  }
+  function teardownDraw() {
+    map.container.getElement().style.cursor = '';
+    map.events.remove('click', onMapClick);
+    removeFinishButton();
+    if (drawPolygon) {
+      map.geoObjects.remove(drawPolygon);
+      drawPolygon = null;
+    }
+    drawCoords = [];
+  }
+  function onMapClick(e) {
+    const coord = e.get('coords');
+    drawCoords.push(coord);
+    if (drawPolygon) {
+      map.geoObjects.remove(drawPolygon);
+    }
+    if (drawCoords.length > 2) {
+      drawPolygon = new ymaps.Polygon([drawCoords], {}, {
+        strokeColor: '#FF0000',
+        fillColor:   'rgba(255,0,0,0.3)',
+        strokeWidth: 2
+      });
+      map.geoObjects.add(drawPolygon);
+    }
+  }
+  function addFinishButton() {
+    if (document.getElementById('finish-draw')) return;
+    const btn = document.createElement('button');
+    btn.id = 'finish-draw';
+    btn.textContent = 'Завершить обводку';
+    Object.assign(btn.style, {
+      position: 'absolute', top: '10px', right: '10px', zIndex: 2000,
+      padding: '8px 12px', background: '#2795f4', color: '#fff', border: 'none'
+    });
+    document.body.append(btn);
+    btn.addEventListener('click', finishDraw);
+  }
+  function removeFinishButton() {
+    const btn = document.getElementById('finish-draw');
+    if (btn) btn.remove();
+  }
+  function finishDraw() {
+    teardownDraw();
+    if (!drawPolygon) return;
+    const inside = data.filter(item =>
+      drawPolygon.geometry.contains([+item.geo_lat, +item.geo_lon])
+    );
+    updateCounts(inside);
+  }
+
+  // --- Режимы и переключение ---
+  function teardownMode() {
+    if (mode === 'select') teardownSelect();
+    if (mode === 'draw')   teardownDraw();
+  }
+  function initMode() {
+    if (mode === 'select') initSelect();
+    if (mode === 'draw')   initDraw();
+  }
+  function setMode(newMode) {
+    teardownMode();
+    mode = newMode;
+    initMode();
+  }
+
+  // --- Инициализация UI-кнопок ---
+  document.addEventListener('DOMContentLoaded', () => {
+    const controls = document.getElementById('mode-controls');
+    if (!controls) return;
+    controls.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+    // стартовый режим
+    setMode('normal');
+  });
+
+  // --- Ждём готовности карты и существующих placemarks ---
+  ymaps.ready(() => {
+    // В случае, если кнопки создаются только после map.init, повторим инициализацию
+    const controls = document.getElementById('mode-controls');
+    if (controls) setMode('normal');
+  });
+})();

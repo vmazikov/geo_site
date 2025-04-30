@@ -11,7 +11,6 @@
 <body>
   <!-- Карта занимает весь экран -->
   <div id="map"></div>
-  
 <!-- Нижний выдвижной блок -->
 <div id="bottom-sheet" class="collapsed">
     <button id="toggle-sheet">Показать фильтры</button>
@@ -56,6 +55,12 @@
         <input type="number" id="entrances-to"   placeholder="До" min="0">
   
         <button id="apply-filters">Применить фильтры</button>
+
+        <div id="mode-controls">
+            <button class="mode-btn" data-mode="normal">Обычный</button>
+            <button class="mode-btn" data-mode="select">Режим выбора</button>
+            <button class="mode-btn" data-mode="draw">Режим обводки</button>
+          </div>
       </div>
     </div>
   </div>
