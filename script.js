@@ -129,7 +129,8 @@ fetch('address.json')
             <strong>Свободные порты:</strong> ${item.free_ports}<br>
             <strong>Занятые порты:</strong> ${item.busy_ports}<br>
             <strong>Этажи:</strong> ${item.floors_in_house}<br>
-            <strong>Подъезды:</strong> ${item.entrances_in_house}
+            <strong>Подъезды:</strong> ${item.entrances_in_house}<br>
+            <strong>Квартиры:</strong> ${item.apartments_in_house}
           `,
         }, {
           iconColor: iconColor
