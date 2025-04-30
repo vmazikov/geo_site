@@ -114,7 +114,7 @@ html, body {
           user-select: none;   /* Standard */
 }
 #bottom-sheet.collapsed {
-  height: 4vh;   /* свернута: видна только кнопка */
+  height: 5vh;   /* свернута: видна только кнопка */
 }
 #bottom-sheet.expanded {
   height: 90vh;   /* раскрыта: показывается всё содержимое */
